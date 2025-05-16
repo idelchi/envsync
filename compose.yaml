@@ -1,0 +1,66 @@
+services:
+  build:
+    build:
+      args:
+        - ENVPROF_VERSION=local
+      target: build
+    image: idelchi/envprof:build
+    container_name: envprof
+    hostname: envprof
+    volumes:
+      - .:/home/user/ws
+    extra_hosts:
+      - host:host-gateway
+    working_dir: /home/user/ws
+    networks:
+      - envprof
+
+  final:
+    extends: build
+    working_dir: /home/user/
+    image: idelchi/envprof:final
+    build:
+      args:
+        - ENVPROF_VERSION=local
+      target: final
+
+  gifs:
+    build:
+      dockerfile: Dockerfile.gifs
+      args:
+        - GODYL_GITHUB_TOKEN=${GODYL_GITHUB_TOKEN}
+      secrets:
+        - .env
+    container_name: machine
+    hostname: machine
+    volumes:
+      - ./.bashrc:/home/user/.bashrc
+      - ./envprof.yaml:/home/user/envprof.yaml
+      - ./secrets.env:/home/user/secrets.env
+      - ./assets/gifs:/home/user/gifs
+      - ./assets/tapes:/home/user/tapes
+    env_file:
+      - .env
+    secrets:
+      - .env
+    extra_hosts:
+      - host:host-gateway
+    working_dir: /home/user
+    networks:
+      - envprof
+    entrypoint:
+      - /bin/bash
+      - -c
+    command:
+      - |
+        source /home/user/.bashrc
+        pall
+
+networks:
+  envprof:
+    name: envprof
+    driver: bridge
+
+secrets:
+  .env:
+    file: ./.env
