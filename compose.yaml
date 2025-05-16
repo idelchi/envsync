@@ -1,0 +1,32 @@
+services:
+  jekyll:
+    build:
+      dockerfile: Dockerfile.jekyll
+    container_name: jekyll
+    hostname: envsyncjekyll
+    volumes:
+      - ./docs:/home/user/ws
+    working_dir: /home/user/ws
+    networks:
+      - envsync
+    ports:
+      - 4000:4000
+    command:
+      - jekyll
+      - serve
+      - --host
+      - 0.0.0.0
+      - --source
+      - .
+      - --destination
+      - /tmp/_site
+      - --livereload
+      - --force_polling
+      - --incremental
+      - --watch
+
+networks:
+  envsync:
+    name: envsync
+    driver: bridge
+

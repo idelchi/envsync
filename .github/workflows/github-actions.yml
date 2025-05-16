@@ -1,0 +1,25 @@
+name: envsync
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - dev
+      - main
+
+jobs:
+  next-tag:
+    uses: idelchi/devenv/.github/workflows/next-tag.yml@dev
+    if: github.ref == 'refs/heads/dev'
+
+  prerelease:
+    uses: idelchi/devenv/.github/workflows/prerelease.yml@dev
+    if: github.ref == 'refs/heads/dev'
+    needs: next-tag
+    permissions:
+      contents: write
+      actions: write
+    with:
+      tag: ${{ needs.next-tag.outputs.next }}-beta
+      workflow: release
