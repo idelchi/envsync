@@ -12,7 +12,9 @@ func Add() *cobra.Command {
 		Short: "Add or update variable",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(_ *cobra.Command, a []string) error {
-			s, err := profile.Load(fileFlag)
+			options := []string{"envsync.yaml", "envsync.yml", "envsync.toml"}
+
+			s, err := profile.Load(fileFlag, options...)
 			if err != nil {
 				return err
 			}

@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/idelchi/envsync/internal/profile"
 	"github.com/spf13/cobra"
 )
@@ -14,15 +12,12 @@ func Convert() *cobra.Command {
 		Short: "Convert the current config to another format and write to file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			ext := "." + strings.ToLower(args[0])
-
 			store, err := profile.Load(fileFlag)
 			if err != nil {
 				return err
 			}
 
-			store.Path = "envsync" + ext
-			store.Ext = ext
+			store.File = store.File.WithExtension(args[0])
 			return store.Save()
 		},
 	}

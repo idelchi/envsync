@@ -12,12 +12,12 @@
 [![Build Status](https://github.com/idelchi/envsync/actions/workflows/github-actions.yml/badge.svg)](https://github.com/idelchi/envsync/actions/workflows/github-actions.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`envsync` is a CLI tool for managing named environment profiles in YAML, TOML, or JSON. It supports layering (inheritance) of profiles and is designed for clarity and shell integration.
+`envsync` is a CLI tool for managing named environment profiles in YAML or TOML. It supports layering (inheritance) of profiles and is designed for clarity and shell integration.
 
 ## Features
 
 - Define multiple environment profiles in one file
-- Supports YAML, TOML, and JSON
+- Supports YAML and TOML formats
 - Profile inheritance with conflict resolution
 - Export to shell using `eval "$(envsync export <profile>)"`
 - Apply profiles to current environment or write to `.env` files
@@ -59,8 +59,8 @@ envsync remove dev
 # list all profiles
 envsync profiles
 
-# convert between formats
-envsync convert [yaml|toml|json]
+# convert current file to another format
+envsync convert [yaml|toml]
 ```
 
 ## Format
@@ -93,26 +93,6 @@ extends = ["base"]
 [dev.env]
 DB_NAME = "devdb"
 DEBUG = "true"
-```
-
-### JSON
-
-```json
-{
-  "base": {
-    "env": {
-      "DB_HOST": "localhost",
-      "DB_PORT": "5432"
-    }
-  },
-  "dev": {
-    "extends": ["base"],
-    "env": {
-      "DB_NAME": "devdb",
-      "DEBUG": "true"
-    }
-  }
-}
 ```
 
 ## Inheritance Behavior
