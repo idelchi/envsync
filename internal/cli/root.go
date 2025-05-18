@@ -17,13 +17,16 @@ type Flags struct {
 }
 
 // Execute runs the root command for the envprof CLI application.
-func Execute() error {
+func Execute(version string) error {
 	root := &cobra.Command{
 		Use:           "envprof",
 		Short:         "Manage env profiles in YAML/TOML/JSON with inheritance",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Version:       version,
 	}
+
+	root.SetVersionTemplate("{{ .Version }}\n")
 
 	flags := &Flags{}
 
