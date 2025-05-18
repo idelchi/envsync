@@ -111,6 +111,9 @@ Results in:
 
 ## Extras
 
+Below commands are destructive (remove comments, order, newlines, etc)
+and should just be used to set up the initial file.
+
 ```sh
 # convert current file to another format
 envprof convert [yaml|toml]
