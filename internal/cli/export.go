@@ -57,6 +57,7 @@ func Export(flags *Flags) *cobra.Command {
 			envs := vars.Env.AsSlice()
 
 			dotenv := file.New(args[1])
+			envs = append([]string{fmt.Sprintf("# Active profile: %q", prof)}, envs...)
 			if err := dotenv.Write([]byte(strings.Join(envs, "\n"))); err != nil {
 				return fmt.Errorf("write dotenv: %w", err)
 			}
