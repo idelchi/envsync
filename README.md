@@ -35,13 +35,13 @@ curl -sSL https://raw.githubusercontent.com/idelchi/envprof/refs/heads/main/inst
 
 ```sh
 # list all profiles
-envprof profiles
+envprof list
 
 # list all variables in a profile
-envprof get dev
+envprof list dev
 
 # list a specific variable
-envprof get dev DB_URL
+envprof list dev DB_URL
 
 # export for shell eval
 eval "$(envprof export dev)"

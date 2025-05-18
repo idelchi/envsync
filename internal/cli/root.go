@@ -42,9 +42,9 @@ func Execute() error {
 	root.PersistentFlags().BoolVarP(&flags.Verbose, "verbose", "v", false, "enable verbose output")
 
 	root.AddCommand(
-		Get(flags),
+		List(flags),
 		Export(flags),
-		Profiles(flags), Convert(flags),
+		Convert(flags),
 		Import(flags),
 	)
 

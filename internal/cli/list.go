@@ -7,23 +7,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Get returns the cobra command for retrieving a variable's value.
+// List returns the cobra command for listing profiles and their variables.
 //
 //nolint:forbidigo	// Command print out to the console.
-func Get(flags *Flags) *cobra.Command {
+func List(flags *Flags) *cobra.Command {
 	return &cobra.Command{
-		Use:   "get <profile> [key]",
-		Short: "Get all or a specific variable from a profile",
+		Use:   "list <profile> [key]",
+		Short: "List profiles and their variables",
 		Long: heredoc.Doc(`
-		Get all or a specific variable from a profile.
-		If no key is provided, all variables will be printed.
+		Calling this function with:
+			- no arguments lists all available profiles (alphabetically sorted).
+			- with a profile name lists all variables for that profile.
+			- with a profile name and a key lists the value of that key for that profile.
 		`),
 		Aliases: []string{"ls"},
-		Args:    cobra.RangeArgs(1, 2), //nolint:mnd	// The command takes 1 or 2 arguments as documented.
+		Args:    cobra.MaximumNArgs(2), //nolint:mnd	// The command takes up to 2 arguments as documented.
 		RunE: func(_ *cobra.Command, args []string) error {
 			store, err := load(flags)
 			if err != nil {
 				return err
+			}
+
+			if len(args) == 0 {
+				for _, profile := range store.ProfilesSorted() {
+					fmt.Println(profile)
+				}
+
+				return nil
 			}
 
 			prof := args[0]
