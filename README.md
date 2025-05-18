@@ -1,54 +1,64 @@
 <p align="center">
-  <h3 align="center"><code>envsync</code></h3>
+  <img alt="envprof logo" src="assets/envprof.png" height="150" />
+  <h3 align="center"><code>envprof</code></h3>
   <p align="center">Profile-based environment variable manager</p>
 </p>
 
 ---
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/idelchi/envsync.svg)](https://pkg.go.dev/github.com/idelchi/envsync)
-[![Go Report Card](https://goreportcard.com/badge/github.com/idelchi/envsync)](https://goreportcard.com/report/github.com/idelchi/envsync)
-[![Build Status](https://github.com/idelchi/envsync/actions/workflows/github-actions.yml/badge.svg)](https://github.com/idelchi/envsync/actions/workflows/github-actions.yml/badge.svg)
+[![GitHub release](https://img.shields.io/github/v/release/idelchi/envprof)](https://github.com/idelchi/envprof/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/idelchi/envprof.svg)](https://pkg.go.dev/github.com/idelchi/envprof)
+[![Go Report Card](https://goreportcard.com/badge/github.com/idelchi/envprof)](https://goreportcard.com/report/github.com/idelchi/envprof)
+[![Build Status](https://github.com/idelchi/envprof/actions/workflows/github-actions.yml/badge.svg)](https://github.com/idelchi/envprof/actions/workflows/github-actions.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`envsync` is a CLI tool for managing named environment profiles in YAML, TOML, or JSON. It supports layering (inheritance) of profiles and is designed for clarity and shell integration.
+`envprof` is a CLI tool for managing named environment profiles in YAML or TOML.
+It supports layering (inheritance) of profiles and is designed for clarity and shell integration.
 
 ## Features
 
 - Define multiple environment profiles in one file
-- Supports YAML, TOML, and JSON
+- Supports YAML and TOML formats
 - Profile inheritance with conflict resolution
-- Export to shell using `eval "$(envsync export <profile>)"`
-- Apply profiles to current environment or write to `.env` files
+- Export profiles to shell using `eval "$(envprof export <profile>)"`
+- Export profiles to `.env` files
+
+## Installation
+
+For a quick installation, you can use the provided installation script:
+
+```sh
+curl -sSL https://raw.githubusercontent.com/idelchi/envprof/refs/heads/main/install.sh | sh -s -- -d ~/.local/bin
+```
 
 ## Usage
 
 ```sh
-# set a variable
-envsync set dev DB_URL postgres://localhost:5432
+# list all profiles
+envprof profiles
 
-# read a variable
-envsync get dev DB_URL
+# list all variables in a profile
+envprof get dev
 
-# list all variables (after inheritance)
-envsync list dev
+# list a specific variable
+envprof get dev DB_URL
 
 # export for shell eval
-eval "$(envsync export dev)"
+eval "$(envprof export dev)"
 
-# apply profile and write to .env
-envsync apply dev .env
-
-# remove a key
-envsync remove dev DB_URL
-
-# delete entire profile
-envsync delete dev
-
-# list all profiles
-envsync profiles
+# export profile to a file
+envprof export dev .env
 ```
 
+The following flags are available:
+
+- `--file`, `-f`: Specify a file (or list of fallbacks) to load.
+  Defaults to `ENVPROF_FILE` or `envprof.yaml, envprof.yml, envprof.toml`.
+- `--verbose`, `-v`: Enable verbose output to trace inheritance for variables.
+
 ## Format
+
+Complex types (arrays, maps) are serialized as JSON representations.
 
 ### YAML
 
@@ -80,26 +90,6 @@ DB_NAME = "devdb"
 DEBUG = "true"
 ```
 
-### JSON
-
-```json
-{
-  "base": {
-    "env": {
-      "DB_HOST": "localhost",
-      "DB_PORT": "5432"
-    }
-  },
-  "dev": {
-    "extends": ["base"],
-    "env": {
-      "DB_NAME": "devdb",
-      "DEBUG": "true"
-    }
-  }
-}
-```
-
 ## Inheritance Behavior
 
 Inheritance is resolved in order. Later profiles override earlier ones. For example:
@@ -115,6 +105,16 @@ staging:
 
 Results in:
 
-- `base.env` applied
-- then `common.env` (overrides base on conflict)
-- then `staging.env` (final override)
+- `base` applied
+- then `common` (overrides base on conflict)
+- then `staging` (final override)
+
+## Extras
+
+```sh
+# convert current file to another format
+envprof convert [yaml|toml]
+
+# import values from a dotenv file into a profile
+envprof import dev .env
+```

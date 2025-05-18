@@ -1,4 +1,4 @@
-name: envsync
+name: envprof
 
 on:
   workflow_dispatch:
