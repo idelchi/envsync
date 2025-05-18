@@ -58,58 +58,72 @@ The following flags are available:
 
 ## Format
 
-Complex types (arrays, maps) are serialized as JSON representations.
+Complex types (arrays, maps) are serialized as JSON representations, everything else is stringified.
 
 ### YAML
 
 ```yaml
-base:
-  env:
-    DB_HOST: localhost
-    DB_PORT: "5432"
-
 dev:
-  extends: [base]
+  extends:
+    - staging
   env:
-    DB_NAME: devdb
-    DEBUG: "true"
+    HOST: localhost
+
+staging:
+  extends:
+    - prod
+  env:
+    HOST: staging.example.com
+    DEBUG: true
+
+prod:
+  env:
+    HOST: prod.example.com
+    PORT: 80
+    DEBUG: false
 ```
 
 ### TOML
 
 ```toml
-[base.env]
-DB_HOST = "localhost"
-DB_PORT = "5432"
-
 [dev]
-extends = ["base"]
-
+extends = ['staging']
 [dev.env]
-DB_NAME = "devdb"
-DEBUG = "true"
+HOST = 'localhost'
+
+[staging]
+extends = ['prod']
+[staging.env]
+DEBUG = true
+HOST = 'staging.example.com'
+
+[prod.env]
+DEBUG = false
+HOST = 'prod.example.com'
+PORT = 80
 ```
 
 ## Inheritance Behavior
 
-Inheritance is resolved in order. Later profiles override earlier ones. For example:
+Inheritance is resolved in order. Later profiles override earlier ones. As an example,
+running `envprof export dev .env` with the previous YAML file produces the following `.env` file:
 
-```yaml
-staging:
-  extends:
-    - base
-    - common
-  env:
-    DEBUG: "false"
+```sh
+# Active profile: "dev"
+HOST=localhost
+DEBUG=true
+PORT=80
 ```
 
-Results in:
+Inspecting with `envprof list dev -v` would show the inheritance chain:
 
-- `base` applied
-- then `common` (overrides base on conflict)
-- then `staging` (final override)
+```sh
+HOST=localhost
+DEBUG=true                                    (inherited from "staging")
+PORT=80                                       (inherited from "prod")
+```
 
-## Destructive commands
+## Additional commands
 
 Below commands are destructive (reformat the profiles file)
 and should just be used to set up the initial file if you care about comments and formatting.
