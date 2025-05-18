@@ -109,15 +109,16 @@ Results in:
 - then `common` (overrides base on conflict)
 - then `staging` (final override)
 
-## Extras
+## Destructive commands
 
-Below commands are destructive (remove comments, order, newlines, etc)
-and should just be used to set up the initial file.
+Below commands are destructive (reformat the profiles file)
+and should just be used to set up the initial file if you care about comments and formatting.
 
 ```sh
+# import values from a dotenv file into a profile (creating it if it doesn't exist),
+# with the option whether to keep existing values in case of conflicts or to overwrite them
+envprof import dev [--keep] .env
+
 # convert current file to another format
 envprof convert [yaml|toml]
-
-# import values from a dotenv file into a profile
-envprof import dev .env
 ```

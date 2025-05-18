@@ -41,6 +41,10 @@ func Import(flags *Flags) *cobra.Command {
 				return fmt.Errorf("loading dotenv: %w", err)
 			}
 
+			if !store.Exists(prof) {
+				store.Create(prof)
+			}
+
 			vars, err := store.RawEnv(prof)
 			if err != nil {
 				return fmt.Errorf("getting vars: %w", err)
@@ -64,7 +68,7 @@ func Import(flags *Flags) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&keep, "keep", "k", false, "Keep existing variables in the profile in case of conflicts")
+	cmd.Flags().BoolVar(&keep, "keep", false, "Keep existing variables in the profile in case of conflicts")
 
 	return cmd
 }

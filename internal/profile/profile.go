@@ -23,6 +23,14 @@ type Profile struct {
 	Extends []string `toml:"extends,omitempty" yaml:"extends,omitempty"`
 }
 
+// newProfile creates a new profile with an empty env-var map.
+func newProfile() *Profile {
+	return &Profile{
+		Env:    make(env.Env),
+		RawEnv: make(RawEnv),
+	}
+}
+
 // ToEnv serialises p.rawEnv into p.Env using Stringify.
 // – Scalars pass through unchanged.
 // – Non-scalars are JSON-minified and single-quoted (see Stringify).

@@ -72,6 +72,16 @@ func (s *Store) Load() (*Store, error) {
 		return nil, fmt.Errorf("unmarshalling file %q: %w", s.File.Path(), err)
 	}
 
+	// Make sure no nil entries exist in the profiles map.
+	for name, profile := range s.Profiles {
+		if profile == nil {
+			s.Create(name)
+		} else if profile.RawEnv == nil {
+			profile.RawEnv = make(RawEnv)
+			s.Profiles[name] = profile
+		}
+	}
+
 	for name, profile := range s.Profiles {
 		if err = profile.ToEnv(); err != nil {
 			return nil, fmt.Errorf("profile %q: converting to env: %w", name, err)
@@ -105,6 +115,11 @@ func (s *Store) Exists(name string) bool {
 	_, ok := s.Profiles[name]
 
 	return ok
+}
+
+// Create creates a new profile in the store.
+func (s *Store) Create(name string) {
+	s.Profiles[name] = newProfile()
 }
 
 // RawEnv returns the raw environment variables for a profile.

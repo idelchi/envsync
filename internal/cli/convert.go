@@ -12,8 +12,9 @@ import (
 // Convert returns the cobra command for converting the config format.
 func Convert(flags *Flags) *cobra.Command {
 	return &cobra.Command{
-		Use:   "convert <yaml|toml>",
-		Short: "Convert the current config to another format",
+		GroupID: "destructive",
+		Use:     "convert <yaml|toml>",
+		Short:   "Convert the current config to another format",
 		Long: heredoc.Doc(`
 			Convert the current config to another format.
 			Will write to a file with the same name as the current config file, but with the new extension.
