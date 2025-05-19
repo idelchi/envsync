@@ -21,8 +21,12 @@ func Execute(version string) error {
 	root := &cobra.Command{
 		Use:           "envprof",
 		Short:         "Manage env profiles in YAML/TOML with inheritance",
-		SilenceErrors: true,
 		Version:       version,
+		SilenceErrors: true,
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			// Do not print usage after basic validation has been done.
+			cmd.SilenceUsage = true
+		},
 	}
 
 	root.SetVersionTemplate("{{ .Version }}\n")
@@ -48,34 +52,11 @@ func Execute(version string) error {
 		StringSliceVarP(&flags.File, "file", "f", defaultFiles, "config file to use, in order of preference")
 	root.PersistentFlags().BoolVarP(&flags.Verbose, "verbose", "v", false, "enable verbose output")
 
-	listCommand := List(flags)
-	listCommand.GroupID = "core"
-
-	exportCommand := Export(flags)
-	exportCommand.GroupID = "core"
-
-	convertCommand := Convert(flags)
-	convertCommand.GroupID = "destructive"
-
-	importCmd := Import(flags)
-	importCmd.GroupID = "destructive"
-
 	root.AddCommand(
-		listCommand,
-		exportCommand,
-		convertCommand,
-		importCmd,
+		List(flags),
+		Export(flags),
+		Shell(flags),
 	)
-
-	root.AddGroup(
-		&cobra.Group{
-			ID:    "core",
-			Title: "Core commands",
-		},
-		&cobra.Group{
-			ID:    "destructive",
-			Title: "Destructive commands that reformat the profiles file",
-		})
 
 	if err := root.Execute(); err != nil {
 		return fmt.Errorf("envprof: %w", err)

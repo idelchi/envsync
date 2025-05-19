@@ -14,7 +14,9 @@ import (
 //
 //nolint:forbidigo	// Command print out to the console.
 func Export(flags *Flags) *cobra.Command {
-	return &cobra.Command{
+	prefix := "export"
+
+	cmd := &cobra.Command{
 		Use:   "export <profile> [file]",
 		Short: "Emit export KEY=VAL lines or write out as dotenv file",
 		Long: heredoc.Doc(`
@@ -34,20 +36,20 @@ func Export(flags *Flags) *cobra.Command {
 		Aliases: []string{"x"},
 		Args:    cobra.RangeArgs(1, 2), //nolint:mnd	// The command takes 1 or 2 arguments as documented.
 		RunE: func(_ *cobra.Command, args []string) error {
-			store, err := load(flags)
+			profiles, err := load(flags)
 			if err != nil {
 				return err
 			}
 
 			prof := args[0]
 
-			vars, err := store.Resolved(prof)
+			vars, err := profiles.Environment(prof)
 			if err != nil {
-				return fmt.Errorf("get vars: %w", err)
+				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
 			if len(args) == 1 {
-				envs := vars.FormatAll("export", false)
+				envs := vars.FormatAll(prefix, false)
 
 				fmt.Println(envs)
 
@@ -65,4 +67,8 @@ func Export(flags *Flags) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().StringVarP(&prefix, "prefix", "p", prefix, "Prefix for the export command")
+
+	return cmd
 }

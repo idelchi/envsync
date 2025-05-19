@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-
-	"github.com/idelchi/godyl/pkg/env"
 )
 
 // Stringify turns any Go value into the dotenv-ready string described earlier.
@@ -70,14 +68,4 @@ func needsQuotes(s string) bool {
 	}
 
 	return false
-}
-
-// ToRaw converts an env.Env to a RawEnv.
-func ToRaw(env env.Env) RawEnv {
-	raw := make(RawEnv, len(env))
-	for k, v := range env {
-		raw[k] = v
-	}
-
-	return raw
 }

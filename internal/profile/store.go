@@ -3,10 +3,10 @@ package profile
 import (
 	"errors"
 	"fmt"
-	"slices"
+	"os"
 
-	"github.com/idelchi/godyl/pkg/dag"
 	"github.com/idelchi/godyl/pkg/path/file"
+	"github.com/idelchi/godyl/pkg/path/files"
 )
 
 // Type represents the type of the profile file.
@@ -69,129 +69,28 @@ func (s *Store) Load() (*Store, error) {
 	}
 
 	if err = s.unmarshal(data); err != nil {
-		return nil, fmt.Errorf("unmarshalling file %q: %w", s.File.Path(), err)
+		return nil, fmt.Errorf("marshalling file %q: %w", s.File.Path(), err)
 	}
 
 	// Make sure no nil entries exist in the profiles map.
 	for name, profile := range s.Profiles {
 		if profile == nil {
-			s.Create(name)
-		} else if profile.RawEnv == nil {
-			profile.RawEnv = make(RawEnv)
+			s.Profiles.Create(name)
+		} else if profile.Env == nil {
+			profile.Env = make(Env)
 			s.Profiles[name] = profile
-		}
-	}
-
-	for name, profile := range s.Profiles {
-		if err = profile.ToEnv(); err != nil {
-			return nil, fmt.Errorf("profile %q: converting to env: %w", name, err)
 		}
 	}
 
 	return s, err
 }
 
-// Save writes the store to disk.
-func (s *Store) Save() error {
-	var (
-		out []byte
-		err error
-	)
-
-	out, err = s.marshal()
-	if err != nil {
-		return fmt.Errorf("marshalling file %q: %w", s.File.Path(), err)
-	}
-
-	if err := s.File.Write(out); err != nil {
-		return fmt.Errorf("writing file %q: %w", s.File.Path(), err)
-	}
-
-	return nil
-}
-
-// Exists checks if a profile exists in the store.
-func (s *Store) Exists(name string) bool {
-	_, ok := s.Profiles[name]
-
-	return ok
-}
-
-// Create creates a new profile in the store.
-func (s *Store) Create(name string) {
-	s.Profiles[name] = newProfile()
-}
-
-// RawEnv returns the raw environment variables for a profile.
-func (s *Store) RawEnv(name string) (*RawEnv, error) {
-	profile, ok := s.Profiles[name]
+// File returns the first file found in the given paths.
+func File(paths ...string) (file.File, error) {
+	file, ok := files.New("", paths...).Exists()
 	if !ok {
-		return nil, fmt.Errorf("%w: %q", ErrProfileNotFound, name)
+		return file, fmt.Errorf("profile %w: %v", os.ErrNotExist, paths)
 	}
 
-	return &profile.RawEnv, nil
-}
-
-// Resolved returns the merged environment variables for a profile, resolving dependencies.
-func (s *Store) Resolved(name string) (*Env, error) {
-	if !s.Exists(name) {
-		return nil, fmt.Errorf("%w: %q", ErrProfileNotFound, name)
-	}
-
-	// Build dependency DAG.
-	nodes := make([]string, 0, len(s.Profiles))
-	for n := range s.Profiles {
-		nodes = append(nodes, n)
-	}
-
-	g, err := dag.Build(nodes, func(n string) []string { return s.Profiles[n].Extends })
-	if err != nil {
-		return nil, fmt.Errorf("dag: %w", err)
-	}
-
-	chain, err := g.Chain(name)
-	if err != nil {
-		return nil, fmt.Errorf("chain: %w", err)
-	}
-
-	env := &Env{
-		Env:         s.Profiles[name].Env,
-		Inheritance: make(Inheritance),
-	}
-
-	if len(chain) == 1 {
-		return env, nil
-	}
-
-	slices.Reverse(chain)
-
-	// Remove the first element, as it is the profile itself.
-	chain = chain[1:]
-
-	errs := []error{}
-
-	for _, name := range chain {
-		m := s.Profiles[name].Env
-
-		for k, v := range m {
-			if !env.Env.Exists(k) {
-				errs = append(errs, env.Env.AddPair(k, v))
-				env.Inheritance[k] = name
-			}
-		}
-	}
-
-	return env, errors.Join(errs...)
-}
-
-// ProfilesSorted returns the profile names in sorted order.
-func (s *Store) ProfilesSorted() []string {
-	out := make([]string, 0, len(s.Profiles))
-	for k := range s.Profiles {
-		out = append(out, k)
-	}
-
-	slices.Sort(out)
-
-	return out
+	return file, nil
 }

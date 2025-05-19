@@ -10,28 +10,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-// marshal encodes the store's profiles into the specified format.
-func (s *Store) marshal() ([]byte, error) {
-	switch s.Type {
-	case YAML:
-		data, err := yaml.MarshalWithOptions(s.Profiles)
-		if err != nil {
-			return nil, fmt.Errorf("yaml: encode: %w", err)
-		}
-
-		return data, nil
-	case TOML:
-		data, err := toml.Marshal(s.Profiles)
-		if err != nil {
-			return nil, fmt.Errorf("toml: encode: %w", err)
-		}
-
-		return data, nil
-	default:
-		return nil, fmt.Errorf("%w: %q", ErrUnsupportedFileType, s.Type)
-	}
-}
-
 // unmarshal decodes the data into the store's profiles.
 func (s *Store) unmarshal(data []byte) error {
 	switch s.Type {

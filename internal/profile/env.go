@@ -2,50 +2,37 @@ package profile
 
 import (
 	"fmt"
-	"strings"
+	"slices"
 
 	"github.com/idelchi/godyl/pkg/env"
 )
 
-// Inheritance carries a mapping from environment variable names to where they are inherited from.
-type Inheritance map[string]string
+// Env is a map of environment variable names to their non-stringified values.
+type Env map[string]any
 
-// Env represents the environment variables and their inheritance.
-type Env struct {
-	// Env holds the environment variables.
-	Env env.Env
-	// Inheritance holds the mapping of environment variable names to their source.
-	Inheritance Inheritance
-}
+// Stringified serializes Env into env.Env using Stringify.
+// – Scalars pass through unchanged.
+// – Non-scalars are JSON-minified and single-quoted (see Stringify).
+func (e Env) Stringified() (env.Env, error) {
+	env := make(env.Env, len(e))
 
-// Format returns the formatted value of a single variable.
-func (e Env) Format(key string, verbose, withKey bool) string {
-	val := e.Env.Get(key)
-	if withKey {
-		val = fmt.Sprintf("%v=%v", key, val)
+	keys := make([]string, 0, len(e))
+	for k := range e {
+		keys = append(keys, k)
 	}
 
-	if verbose {
-		if src := e.Inheritance[key]; src != "" {
-			return fmt.Sprintf("%-45v (inherited from %q)", val, src)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		str, err := Stringify(e[key])
+		if err != nil {
+			return nil, fmt.Errorf("profile %q: %w", key, err)
+		}
+
+		if err := env.AddPair(key, str); err != nil {
+			return nil, fmt.Errorf("profile %q: %w", key, err)
 		}
 	}
 
-	return val
-}
-
-// FormatAll returns all variables, one per line.
-func (e Env) FormatAll(prefix string, verbose bool) string {
-	out := []string{}
-
-	for k := range e.Env {
-		s := e.Format(k, verbose, true)
-		if prefix != "" {
-			s = fmt.Sprintf("%s %s", prefix, s)
-		}
-
-		out = append(out, s)
-	}
-
-	return strings.Join(out, "\n")
+	return env, nil
 }

@@ -1,6 +1,7 @@
+# <div align="center">envprof</div>
+
 <p align="center">
   <img alt="envprof logo" src="assets/envprof.png" height="150" />
-  <h3 align="center"><code>envprof</code></h3>
   <p align="center">Profile-based environment variable manager</p>
 </p>
 
@@ -13,15 +14,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `envprof` is a CLI tool for managing named environment profiles in YAML or TOML.
-It supports layering (inheritance) of profiles and is designed for clarity and shell integration.
+Supports layering (inheritance) of profiles and imports of `.env` files.
 
 ## Features
 
-- Define multiple environment profiles in one file
-- Supports YAML and TOML formats
-- Profile inheritance with conflict resolution
-- Export profiles to shell using `eval "$(envprof export <profile>)"`
-- Export profiles to `.env` files
+- Define multiple environment profiles in one file in YAML or TOML, with profile inheritance and dotenv imports
+- List profiles, export to a `.env` file, the current shell, or enter a subshell with the environment loaded
 
 ## Installation
 
@@ -40,17 +38,24 @@ envprof list
 # list all variables in a profile
 envprof list dev
 
+# list all variables in a profile with inheritance information
+envprof list dev -v
+
 # list a specific variable
 envprof list dev DB_URL
 
 # export for shell eval
-eval "$(envprof export dev)"
+eval "$(envprof export [--prefix=export] dev)"
+
+# or enter a subshell with the environment loaded,
+# optionally inheriting environment variables from the parent shell
+envprof shell [--inherit] [--shell <shell|detected>] dev
 
 # export profile to a file
 envprof export dev .env
 ```
 
-The following flags are available:
+The following flags are available on all commands:
 
 - `--file`, `-f`: Specify a file (or list of fallbacks) to load.
   Defaults to `ENVPROF_FILE` or `envprof.yaml, envprof.yml, envprof.toml`.
@@ -64,6 +69,8 @@ Complex types (arrays, maps) are serialized as JSON representations, everything 
 
 ```yaml
 dev:
+  dotenv:
+    - .env
   extends:
     - staging
   env:
@@ -88,6 +95,7 @@ prod:
 ```toml
 [dev]
 extends = ['staging']
+dotenv = ['.env']
 [dev.env]
 HOST = 'localhost'
 
@@ -105,34 +113,71 @@ PORT = 80
 
 ## Inheritance Behavior
 
-Inheritance is resolved in order. Later profiles override earlier ones. As an example,
-running `envprof export dev .env` with the previous YAML file produces the following `.env` file:
+Inheritance is resolved in order. Later profiles override earlier ones. `dotenv` entries
+have least priority and are loaded in the order they are defined.
+
+As an example, running `envprof export dev dev.env` with the previous YAML definition
+as well as a sample `.env`:
+
+```sh
+GH_TOKEN=token
+```
+
+produces the following `dev.env` file:
 
 ```sh
 # Active profile: "dev"
-HOST=localhost
 DEBUG=true
+GH_TOKEN=token
+HOST=localhost
 PORT=80
 ```
 
 Inspecting with `envprof list dev -v` would show the inheritance chain:
 
 ```sh
+DEBUG=true              (inherited from "staging")
+GH_TOKEN=token          (inherited from ".env")
 HOST=localhost
-DEBUG=true                                    (inherited from "staging")
-PORT=80                                       (inherited from "prod")
+PORT=80                 (inherited from "prod")
 ```
 
-## Additional commands
-
-Below commands are destructive (reformat the profiles file)
-and should just be used to set up the initial file if you care about comments and formatting.
+The inheritance chain is:
 
 ```sh
-# import values from a dotenv file into a profile (creating it if it doesn't exist),
-# with the option whether to keep existing values in case of conflicts or to overwrite them
-envprof import dev [--keep] .env
-
-# convert current file to another format
-envprof convert [yaml|toml]
+.env -> prod -> staging -> dev
 ```
+
+from lowest to highest priority.
+
+## Shell integration
+
+When using the `shell` subcommand, `envprof` exports `ENVPROF_ACTIVE_SHELL` to the active shell session,
+which can be used to customize the prompt.
+
+An example for `starship.toml` would be:
+
+```toml
+format = """${env_var.envprof}$all"""
+
+[env_var.envprof]
+variable = "ENVPROF_ACTIVE_SHELL"
+format = "\\[envprof: $env_value\\]($style) "
+```
+
+The same variable is used to detect if `envprof` is running in a subshell, and prevent entering a new one (before exiting the current one).
+
+You can also define a function to quickly switch profiles in your shell:
+
+```sh
+envprofx() {
+  local output
+  if output="$(envprof export "${1}" 2>&1)"; then
+    eval "${output}"
+  else
+    echo "${output}" >&2
+  fi
+}
+```
+
+and use as `envprofx dev` to switch to the `dev` profile.

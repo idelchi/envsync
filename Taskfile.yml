@@ -163,9 +163,9 @@ tasks:
 
   squash:
     - |
-      git c
+      git c "[skip ci]"
       git reset --soft $(git rev-list --max-parents=0 HEAD)
-      git commit --amend -m "development branch"
+      git commit --amend -m "[skip ci] development branch"
       git push --force
 
   deadcode:

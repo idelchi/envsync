@@ -23,13 +23,13 @@ func List(flags *Flags) *cobra.Command {
 		Aliases: []string{"ls"},
 		Args:    cobra.MaximumNArgs(2), //nolint:mnd	// The command takes up to 2 arguments as documented.
 		RunE: func(_ *cobra.Command, args []string) error {
-			store, err := load(flags)
+			profiles, err := load(flags)
 			if err != nil {
 				return err
 			}
 
 			if len(args) == 0 {
-				for _, profile := range store.ProfilesSorted() {
+				for _, profile := range profiles.Names() {
 					fmt.Println(profile)
 				}
 
@@ -38,9 +38,9 @@ func List(flags *Flags) *cobra.Command {
 
 			prof := args[0]
 
-			vars, err := store.Resolved(prof)
+			vars, err := profiles.Environment(prof)
 			if err != nil {
-				return fmt.Errorf("get vars: %w", err)
+				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
 			if len(args) > 1 {

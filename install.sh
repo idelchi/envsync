@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-GITHUB_TOKEN=${ENVSYNC_GITHUB_TOKEN:-${GITHUB_TOKEN}}
-DISABLE_SSL=${ENVSYNC_DISABLE_SSL:-${DISABLE_SSL}}
+GITHUB_TOKEN=${ENVPROF_GITHUB_TOKEN:-${GITHUB_TOKEN}}
+DISABLE_SSL=${ENVPROF_DISABLE_SSL:-${DISABLE_SSL}}
 
 # Usage function
 usage() {
@@ -14,15 +14,15 @@ All arguments are passed to the installation script command. See below for detai
 
 Environment variables:
 
-  ENVSYNC_GITHUB_TOKEN/GITHUB_TOKEN       GitHub token to use for downloading assets from GitHub.
-  ENVSYNC_DISABLE_SSL/DISABLE_SSL         Disable SSL verification when downloading assets.
+  ENVPROF_GITHUB_TOKEN/GITHUB_TOKEN       GitHub token to use for downloading assets from GitHub.
+  ENVPROF_DISABLE_SSL/DISABLE_SSL         Disable SSL verification when downloading assets.
 
 Example:
 
     curl -sSL https://raw.githubusercontent.com/idelchi/envprof/refs/heads/main/install.sh | GITHUB_TOKEN=<token> sh -s -- -d ~/.local/bin
 
 EOF
-  curl ${ENVSYNC_DISABLE_SSL:+-k} -sSL https://raw.githubusercontent.com/idelchi/scripts/refs/heads/main/install.sh | INSTALLER_TOOL="envprof" sh -s -- -h
+  curl ${ENVPROF_DISABLE_SSL:+-k} -sSL https://raw.githubusercontent.com/idelchi/scripts/refs/heads/main/install.sh | INSTALLER_TOOL="envprof" sh -s -- -h
 
   exit 1
 }
@@ -45,7 +45,7 @@ parse_args() {
 # Download envprof
 install() {
   # Download tools using envprof
-  curl ${DISABLE_SSL:+-k} -sSL https://raw.githubusercontent.com/idelchi/scripts/refs/heads/main/install.sh | ENVSYNC_GITHUB_TOKEN=${GITHUB_TOKEN} INSTALLER_TOOL="envprof" sh -s -- "$@"
+  curl ${DISABLE_SSL:+-k} -sSL https://raw.githubusercontent.com/idelchi/scripts/refs/heads/main/install.sh | ENVPROF_GITHUB_TOKEN=${GITHUB_TOKEN} INSTALLER_TOOL="envprof" sh -s -- "$@"
 }
 
 need_cmd() {
