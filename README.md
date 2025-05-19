@@ -114,13 +114,13 @@ PORT = 80
 ## Inheritance Behavior
 
 Inheritance is resolved in order. Later profiles override earlier ones. `dotenv` entries
-have least priority and are loaded in the order they are defined.
+have least priority and are loaded in the order they are defined, before layering the profiles on top.
 
 As an example, running `envprof export dev dev.env` with the previous YAML definition
 as well as a sample `.env`:
 
 ```sh
-GH_TOKEN=token
+TOKEN=secret
 ```
 
 produces the following `dev.env` file:
@@ -128,7 +128,7 @@ produces the following `dev.env` file:
 ```sh
 # Active profile: "dev"
 DEBUG=true
-GH_TOKEN=token
+TOKEN=secret
 HOST=localhost
 PORT=80
 ```
@@ -137,7 +137,7 @@ Inspecting with `envprof list dev -v` would show the inheritance chain:
 
 ```sh
 DEBUG=true              (inherited from "staging")
-GH_TOKEN=token          (inherited from ".env")
+TOKEN=secret            (inherited from ".env")
 HOST=localhost
 PORT=80                 (inherited from "prod")
 ```
