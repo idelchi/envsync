@@ -11,18 +11,25 @@ Env SHELL "bash"
 Type 'envprof ls'
 
 Enter
-Enter
 Sleep 1s
 
 Type 'envprof ls dev -v'
 
 Enter
+Sleep 1s
+
+Type 'envprof export dev dev.env'
+
+Enter
+Sleep 1s
+
+Type 'cat dev.env'
+
 Enter
 Sleep 1s
 
 Type 'echo HOST=$HOST'
 
-Enter
 Enter
 Sleep 1s
 
@@ -35,23 +42,4 @@ Sleep 1s
 Type 'echo HOST=$HOST'
 
 Enter
-Sleep 1s
-
-Type 'exit'
-
-Enter
-Sleep 1s
-
-Type 'envprof export dev dev.env'
-
-Enter
-Enter
-Sleep 1s
-
-Type 'cat dev.env'
-
-Enter
-Enter
-Sleep 1s
-
 Sleep 3s

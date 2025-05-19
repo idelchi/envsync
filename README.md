@@ -205,7 +205,7 @@ envprofx() {
 }
 ```
 
-and use as `envprofx dev` to switch to the `dev` profile.
+and use as `envprofx dev` to switch to the `dev` profile. Be aware that this will clutter your shell with the exported variables.
 
 ## Demo
 

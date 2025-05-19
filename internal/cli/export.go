@@ -62,6 +62,7 @@ func Export(files *[]string) *cobra.Command {
 
 			dotenv := file.New(args[1])
 			envs = append([]string{fmt.Sprintf("# Active profile: %q", prof)}, envs...)
+			envs = append(envs, "")
 			if err := dotenv.Write([]byte(strings.Join(envs, "\n"))); err != nil {
 				return fmt.Errorf("write dotenv: %w", err)
 			}
