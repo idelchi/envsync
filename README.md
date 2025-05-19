@@ -1,7 +1,7 @@
-# <div align="center">envprof</div>
+<h1 align="center">envprof</h1>
 
 <p align="center">
-  <img alt="envprof logo" src="assets/envprof.png" height="150" />
+  <img alt="envprof logo" src="assets/images/envprof.png" height="150" />
   <p align="center">Profile-based environment variable manager</p>
 </p>
 
@@ -167,8 +167,13 @@ The shell can be specified or detected automatically.
 
 The following flag is available on all commands:
 
-- `--file`, `-f`: Specify a file (or list of fallbacks) to load.
-  Defaults to `ENVPROF_FILE` or `envprof.yaml, envprof.yml, envprof.toml`.
+```sh
+--file, -f
+```
+
+Specify a file (or list of fallbacks) to load.
+
+Defaults to the first found of `envprof.yaml`, `envprof.yml`, or `envprof.toml`, unless `ENVPROF_FILE` is set.
 
 ## Shell integration
 
