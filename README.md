@@ -206,3 +206,7 @@ envprofx() {
 ```
 
 and use as `envprofx dev` to switch to the `dev` profile.
+
+## Demo
+
+![Demo](assets/gifs/envprof.gif)
