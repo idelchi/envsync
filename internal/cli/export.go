@@ -13,7 +13,7 @@ import (
 // Export returns the cobra command for exporting a profile's variables.
 //
 //nolint:forbidigo	// Command print out to the console.
-func Export(flags *Flags) *cobra.Command {
+func Export(files *[]string) *cobra.Command {
 	prefix := "export"
 
 	cmd := &cobra.Command{
@@ -27,6 +27,8 @@ func Export(flags *Flags) *cobra.Command {
 			$ export KEY2=VAL2
 			$ export KEY3=VAL3
 
+			The --prefix flag can be used to set an alternative prefix for the export command.
+
 			If a file is provided, the output will be written to that file as:
 
 			KEY=VAL
@@ -36,7 +38,7 @@ func Export(flags *Flags) *cobra.Command {
 		Aliases: []string{"x"},
 		Args:    cobra.RangeArgs(1, 2), //nolint:mnd	// The command takes 1 or 2 arguments as documented.
 		RunE: func(_ *cobra.Command, args []string) error {
-			profiles, err := load(flags)
+			profiles, err := load(*files)
 			if err != nil {
 				return err
 			}

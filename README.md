@@ -35,31 +35,22 @@ curl -sSL https://raw.githubusercontent.com/idelchi/envprof/refs/heads/main/inst
 # list all profiles
 envprof list
 
-# list all variables in a profile
-envprof list dev
-
 # list all variables in a profile with inheritance information
 envprof list dev -v
 
 # list a specific variable
 envprof list dev DB_URL
 
-# export for shell eval
-eval "$(envprof export [--prefix=export] dev)"
+# export profile to a file
+envprof export dev .env
 
-# or enter a subshell with the environment loaded,
+# enter a subshell with the environment loaded,
 # optionally inheriting environment variables from the parent shell
 envprof shell [--inherit] [--shell <shell|detected>] dev
 
-# export profile to a file
-envprof export dev .env
+# or export to current shell
+eval "$(envprof export [--prefix=export] dev)"
 ```
-
-The following flags are available on all commands:
-
-- `--file`, `-f`: Specify a file (or list of fallbacks) to load.
-  Defaults to `ENVPROF_FILE` or `envprof.yaml, envprof.yml, envprof.toml`.
-- `--verbose`, `-v`: Enable verbose output to trace inheritance for variables.
 
 ## Format
 
@@ -149,6 +140,35 @@ The inheritance chain is:
 ```
 
 from lowest to highest priority.
+
+## Subcommands
+
+```sh
+list/ls [--verbose/-v] [profile] [variable]
+```
+
+List all profiles, all variables in a profile, or a specific variable in a profile.
+`--verbose` shows from which source each variable is inherited.
+
+```sh
+export/x [--prefix] <profile> [file]
+```
+
+Print out the environment variables of a profile to stdout (with `--prefix` defaulting to `export`) or export them to a file.
+
+```sh
+shell/sh [--inherit] [--shell <shell|detected>] <profile>
+```
+
+Enter a subshell with the environment loaded, optionally inheriting environment variables from the parent shell.
+The shell can be specified or detected automatically.
+
+## Flags
+
+The following flag is available on all commands:
+
+- `--file`, `-f`: Specify a file (or list of fallbacks) to load.
+  Defaults to `ENVPROF_FILE` or `envprof.yaml, envprof.yml, envprof.toml`.
 
 ## Shell integration
 

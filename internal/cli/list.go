@@ -10,8 +10,10 @@ import (
 // List returns the cobra command for listing profiles and their variables.
 //
 //nolint:forbidigo	// Command print out to the console.
-func List(flags *Flags) *cobra.Command {
-	return &cobra.Command{
+func List(files *[]string) *cobra.Command {
+	var verbose bool
+
+	cmd := &cobra.Command{
 		Use:   "list <profile> [key]",
 		Short: "List profiles and their variables",
 		Long: heredoc.Doc(`
@@ -23,7 +25,7 @@ func List(flags *Flags) *cobra.Command {
 		Aliases: []string{"ls"},
 		Args:    cobra.MaximumNArgs(2), //nolint:mnd	// The command takes up to 2 arguments as documented.
 		RunE: func(_ *cobra.Command, args []string) error {
-			profiles, err := load(flags)
+			profiles, err := load(*files)
 			if err != nil {
 				return err
 			}
@@ -48,12 +50,16 @@ func List(flags *Flags) *cobra.Command {
 					//nolint:err113	// Occasional dynamic errors are fine.
 					return fmt.Errorf("key %q not found in profile %q", args[1], prof)
 				}
-				fmt.Println(vars.Format(args[1], flags.Verbose, false))
+				fmt.Println(vars.Format(args[1], verbose, false))
 			} else {
-				fmt.Println(vars.FormatAll("", flags.Verbose))
+				fmt.Println(vars.FormatAll("", verbose))
 			}
 
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show from which source each variable is inherited")
+
+	return cmd
 }

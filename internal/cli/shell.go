@@ -12,7 +12,7 @@ import (
 // Shell returns the cobra command for entering a scoped shell with the environment active.
 //
 //nolint:forbidigo	// Command print out to the console.
-func Shell(flags *Flags) *cobra.Command {
+func Shell(files *[]string) *cobra.Command {
 	env := env.FromEnv()
 
 	var (
@@ -48,7 +48,7 @@ func Shell(flags *Flags) *cobra.Command {
 				return fmt.Errorf("already inside profile %q, exit first", active)
 			}
 
-			profiles, err := load(flags)
+			profiles, err := load(*files)
 			if err != nil {
 				return err
 			}

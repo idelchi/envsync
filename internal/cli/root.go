@@ -8,14 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Flags holds the command-line flags for the envprof CLI application.
-type Flags struct {
-	// File is the config file to use, in order of preference.
-	File []string
-	// Verbose enables verbose output.
-	Verbose bool
-}
-
 // Execute runs the root command for the envprof CLI application.
 func Execute(version string) error {
 	root := &cobra.Command{
@@ -36,26 +28,23 @@ func Execute(version string) error {
 	root.CompletionOptions.DisableDefaultCmd = true
 	cobra.EnableCommandSorting = false
 
-	flags := &Flags{}
-
-	defaultFiles := []string{
+	files := &[]string{
 		"envprof.yaml",
 		"envprof.yml",
 		"envprof.toml",
 	}
 
 	if file := os.Getenv("ENVPROF_FILE"); file != "" {
-		defaultFiles = []string{file}
+		files = &[]string{file}
 	}
 
 	root.PersistentFlags().
-		StringSliceVarP(&flags.File, "file", "f", defaultFiles, "config file to use, in order of preference")
-	root.PersistentFlags().BoolVarP(&flags.Verbose, "verbose", "v", false, "enable verbose output")
+		StringSliceVarP(files, "file", "f", *files, "config file to use, in order of preference")
 
 	root.AddCommand(
-		List(flags),
-		Export(flags),
-		Shell(flags),
+		List(files),
+		Export(files),
+		Shell(files),
 	)
 
 	if err := root.Execute(); err != nil {

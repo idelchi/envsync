@@ -11,8 +11,8 @@ import (
 )
 
 // load loads the profile store from the specified file and fallbacks.
-func load(flags *Flags) (profile.Profiles, error) {
-	profiles, err := profile.New(flags.File...)
+func load(files []string) (profile.Profiles, error) {
+	profiles, err := profile.New(files...)
 	if err != nil {
 		return nil, fmt.Errorf("new profile: %w", err)
 	}
