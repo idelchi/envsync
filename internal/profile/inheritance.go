@@ -40,10 +40,10 @@ func (i InheritanceTracker) Format(key string, verbose, withKey bool) string {
 func (i InheritanceTracker) FormatAll(prefix string, verbose bool) string {
 	out := []string{}
 
-	for _, k := range i.Env.Names() {
+	for _, k := range i.Env.Keys() {
 		s := i.Format(k, verbose, true)
 		if prefix != "" {
-			s = fmt.Sprintf("%s %s", prefix, s)
+			s = fmt.Sprintf("%s%s", prefix, s)
 		}
 
 		out = append(out, s)

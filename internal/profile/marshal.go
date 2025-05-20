@@ -1,13 +1,11 @@
 package profile
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/goccy/go-yaml"
-	"github.com/pelletier/go-toml/v2"
 )
 
 // unmarshal decodes the data into the store's profiles.
@@ -16,29 +14,25 @@ func (s *Store) unmarshal(data []byte) error {
 	case YAML:
 		err := yaml.UnmarshalWithOptions(data, &s.Profiles, yaml.Strict())
 		if err != nil {
-			return fmt.Errorf("yaml: decode: %w", err)
+			return err //nolint:wrapcheck	// Error does not need additional wrapping.
 		}
 
 	case TOML:
-		dec := toml.NewDecoder(bytes.NewReader(data))
-		dec.DisallowUnknownFields()
+		md, err := toml.Decode(string(data), &s.Profiles)
+		if err != nil {
+			return err //nolint:wrapcheck	// Error does not need additional wrapping.
+		}
 
-		if err := dec.Decode(&s.Profiles); err != nil {
-			var sm *toml.StrictMissingError
-			if errors.As(err, &sm) {
-				unknown := make([]string, len(sm.Errors))
-				for i, de := range sm.Errors {
-					unknown[i] = strings.Join(de.Key(), ".")
-				}
-
-				return fmt.Errorf( //nolint:err113		// Occasional dynamic errors are fine.
-					"toml: unknown fields: %v",
-					unknown,
+		if undecoded := md.Undecoded(); len(undecoded) > 0 {
+			errs := make([]error, len(undecoded))
+			for i, key := range undecoded {
+				errs[i] = fmt.Errorf( //nolint:err113	// Occasional dynamic errors are fine.
+					"unknown field: %s",
+					key.String(),
 				)
 			}
 
-			// not a strict-missing problem – propagate original error
-			return fmt.Errorf("toml: decode: %w", err)
+			return errors.Join(errs...)
 		}
 	default:
 		return fmt.Errorf("%w: %q", ErrUnsupportedFileType, s.Type)

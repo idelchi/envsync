@@ -6,7 +6,9 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/idelchi/envprof/internal/terminal"
 	"github.com/idelchi/godyl/pkg/env"
+	"github.com/idelchi/godyl/pkg/path/file"
 )
 
 // Shell returns the cobra command for entering a scoped shell with the environment active.
@@ -27,16 +29,17 @@ func Shell(files *[]string) *cobra.Command {
       Spawn a new shell with the profile's environment.
       The shell will be spawned with the environment variables set to the profile's values.
 
-      Use the --shell flag to specify the shell to spawn, or it will default to the value of $SHELL or $STARSHIP_SHELL,
-      or if those around found, to the value of $ComSpec or cmd.exe on Windows, and sh on all other platforms.
+      Use the --shell flag to specify the shell to spawn, otherwise it will try to identify the current shell.
 
       Use the --inherit flag to inherit the environment variables from the parent shell.
     `),
 		Example: heredoc.Doc(`
       # Spawn a new shell with the profile's environment
       $ godyl shell dev
+
       # Spawn a new shell with the profile's environment and inherit the environment variables from the parent shell
       $ godyl shell dev --inherit
+
       # Spawn a new shell with the profile's environment and use zsh as the shell
       $ godyl shell dev --shell zsh
       `),
@@ -45,7 +48,10 @@ func Shell(files *[]string) *cobra.Command {
 		RunE: func(_ *cobra.Command, args []string) error {
 			if active := env.Get("ENVPROF_ACTIVE_SHELL"); env.Exists("ENVPROF_ACTIVE_SHELL") {
 				//nolint:err113	// Occasional dynamic errors are fine.
-				return fmt.Errorf("already inside profile %q, exit first", active)
+				return fmt.Errorf(
+					"already inside profile %q, nested profiles are not allowed, please exit first",
+					active,
+				)
 			}
 
 			profiles, err := load(*files)
@@ -53,7 +59,9 @@ func Shell(files *[]string) *cobra.Command {
 				return err
 			}
 
-			terminal := newShell(shell)
+			if shell == "" {
+				shell = terminal.Current()
+			}
 
 			prof := args[0]
 
@@ -70,17 +78,18 @@ func Shell(files *[]string) *cobra.Command {
 				vars.Env.Merge(env)
 			}
 
-			fmt.Printf("Entering shell %q with profile %q...\n", shell, prof)
+			fmt.Printf("Entering shell %q with profile %q...\n", file.New(shell).WithoutExtension().Base(), prof)
 
-			if err := terminal.Spawn(vars.Env.AsSlice()); err != nil {
-				return err
+			if err := terminal.Spawn(shell, vars.Env.AsSlice()); err != nil {
+				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&shell, "shell", "s", shell, "Shell to spawn (default: $SHELL or $STARSHIP_SHELL)")
+	cmd.Flags().
+		StringVarP(&shell, "shell", "s", shell, "Shell to spawn. Empty to use the current shell (if identified).")
 	cmd.Flags().BoolVarP(&inherit, "inherit", "i", false, "Inherit environment variables from the parent shell")
 
 	return cmd

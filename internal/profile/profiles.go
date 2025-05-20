@@ -41,8 +41,12 @@ func (p Profiles) Names() []string {
 //
 //nolint:gocognit	// TODO(Idelchi): Refactor this function to reduce cognitive complexity.
 func (p Profiles) Environment(name string) (*InheritanceTracker, error) {
+	if name == "" {
+		return nil, fmt.Errorf("%w: empty profile name", ErrProfileNotFound)
+	}
+
 	if !p.Exists(name) {
-		return nil, fmt.Errorf("%w: %q", ErrProfileNotFound, name)
+		return nil, fmt.Errorf("%w: %s", ErrProfileNotFound, name)
 	}
 
 	// Build dependency DAG.
@@ -73,12 +77,12 @@ func (p Profiles) Environment(name string) (*InheritanceTracker, error) {
 		for _, file := range profile.DotEnv {
 			dotenv, err := env.FromDotEnv(file)
 			if err != nil {
-				return nil, fmt.Errorf("read dotenv %q: %w", file, err)
+				return nil, fmt.Errorf("profile %s: dotenv %s: %w", name, file, err)
 			}
 
 			for k, v := range dotenv {
 				if err := final.Env.AddPair(k, v); err != nil {
-					return nil, fmt.Errorf("dotenv %q: %w", file, err)
+					return nil, fmt.Errorf("profile %s: dotenv %s: %w", name, file, err)
 				}
 
 				final.Inheritance[k] = file
@@ -93,7 +97,7 @@ func (p Profiles) Environment(name string) (*InheritanceTracker, error) {
 
 		stringified, err := m.Stringified()
 		if err != nil {
-			return nil, fmt.Errorf("stringify profile %q: %w", profile, err)
+			return nil, fmt.Errorf("stringify profile %s: %w", profile, err)
 		}
 
 		for k, v := range stringified {

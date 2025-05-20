@@ -14,13 +14,26 @@ func List(files *[]string) *cobra.Command {
 	var verbose bool
 
 	cmd := &cobra.Command{
-		Use:   "list <profile> [key]",
+		Use:   "list [profile] [key]",
 		Short: "List profiles and their variables",
 		Long: heredoc.Doc(`
 		Calling this function with:
 			- no arguments lists all available profiles (alphabetically sorted).
 			- with a profile name lists all variables for that profile.
 			- with a profile name and a key lists the value of that key for that profile.
+
+		When using the -v flag, the source of each variable is shown.
+		If the source is the profile itself, the entry will be blank.
+		`),
+		Example: heredoc.Doc(`
+			# List all profiles
+			$ envprof list
+
+			# List all variables for the 'dev' profile, emitting the source of each variable
+			$ envprof list dev -v
+
+			# List the value of the 'HOST' variable for the 'dev' profile, emitting the source of the variable
+			$ envprof list dev HOST -v
 		`),
 		Aliases: []string{"ls"},
 		Args:    cobra.MaximumNArgs(2), //nolint:mnd	// The command takes up to 2 arguments as documented.

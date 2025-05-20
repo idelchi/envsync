@@ -13,13 +13,14 @@
 [![Build Status](https://github.com/idelchi/envprof/actions/workflows/github-actions.yml/badge.svg)](https://github.com/idelchi/envprof/actions/workflows/github-actions.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`envprof` is a CLI tool for managing named environment profiles in YAML or TOML.
-Supports layering (inheritance) of profiles and imports of `.env` files.
+`envprof` is a CLI tool for managing named environment profiles in `YAML` or `TOML`.
+
+Supports profile inheritance (layering) and importing of `.env` files.
 
 ## Features
 
-- Define multiple environment profiles in one file in YAML or TOML, with profile inheritance and dotenv imports
-- List profiles, export to a `.env` file, the current shell, or enter a subshell with the environment loaded
+- Define multiple environment profiles in a single YAML or TOML file, with inheritance and dotenv support
+- List profiles, export to `.env` files or the current shell, or spawn a subshell with the selected environment
 
 ## Installation
 
@@ -34,34 +35,43 @@ curl -sSL https://raw.githubusercontent.com/idelchi/envprof/refs/heads/main/inst
 ```sh
 # list all profiles
 envprof list
+```
 
+```sh
 # list all variables in a profile with inheritance information
 envprof list dev -v
+```
 
+```sh
 # list a specific variable
-envprof list dev DB_URL
+envprof list dev HOST
+```
 
+```sh
 # export profile to a file
 envprof export dev .env
+```
 
-# enter a subshell with the environment loaded,
-# optionally inheriting environment variables from the parent shell
-envprof shell [--inherit] [--shell <shell|detected>] dev
+```sh
+# spawn a subshell with the environment loaded
+envprof shell dev
+```
 
-# or export to current shell
-eval "$(envprof export [--prefix=export] dev)"
+```sh
+# export to current shell
+eval "$(envprof export dev)"
 ```
 
 ## Format
 
-Complex types (arrays, maps) are serialized as JSON representations, everything else is stringified.
+Complex types (arrays, maps) are serialized as JSON; all other values are simple strings.
 
 ### YAML
 
 ```yaml
 dev:
   dotenv:
-    - .env
+    - secrets.env
   extends:
     - staging
   env:
@@ -86,7 +96,7 @@ prod:
 ```toml
 [dev]
 extends = ['staging']
-dotenv = ['.env']
+dotenv = ['secrets.env']
 [dev.env]
 HOST = 'localhost'
 
@@ -104,81 +114,99 @@ PORT = 80
 
 ## Inheritance Behavior
 
-Inheritance is resolved in order. Later profiles override earlier ones. `dotenv` entries
-have least priority and are loaded in the order they are defined, before layering the profiles on top.
+Inheritance is resolved in order: later profiles override earlier ones.
+`dotenv` files have the lowest priority and load first, before applying profile layers.
 
-As an example, running `envprof export dev dev.env` with the previous YAML definition
-as well as a sample `.env`:
+As an example, running `envprof export dev .env` with the previous YAML definition
+as well as a sample `secrets.env`:
 
 ```sh
 TOKEN=secret
 ```
 
-produces the following `dev.env` file:
+produces the following `.env` file:
 
 ```sh
 # Active profile: "dev"
 DEBUG=true
-TOKEN=secret
 HOST=localhost
 PORT=80
+TOKEN=secret
 ```
 
 Inspecting with `envprof list dev -v` would show the inheritance chain:
 
 ```sh
 DEBUG=true              (inherited from "staging")
-TOKEN=secret            (inherited from ".env")
 HOST=localhost
 PORT=80                 (inherited from "prod")
+TOKEN=secret            (inherited from "secrets.env")
 ```
 
 The inheritance chain is:
 
 ```sh
-.env -> prod -> staging -> dev
+secrets.env -> prod -> staging -> dev
 ```
 
-from lowest to highest priority.
-
-## Subcommands
-
-```sh
-list/ls [--verbose/-v] [profile] [variable]
-```
-
-List all profiles, all variables in a profile, or a specific variable in a profile.
-`--verbose` shows from which source each variable is inherited.
-
-```sh
-export/x [--prefix] <profile> [file]
-```
-
-Print out the environment variables of a profile to stdout (with `--prefix` defaulting to `export`) or export them to a file.
-
-```sh
-shell/sh [--inherit] [--shell <shell|detected>] <profile>
-```
-
-Enter a subshell with the environment loaded, optionally inheriting environment variables from the parent shell.
-The shell can be specified or detected automatically.
+from lowest to highest priority (left to right).
 
 ## Flags
 
-The following flag is available on all commands:
+All commands accept the following flag:
 
 ```sh
 --file, -f
 ```
 
-Specify a file (or list of fallbacks) to load.
+which can be used to specify a file (or a list of fallback files) to load.
 
-Defaults to the first found of `envprof.yaml`, `envprof.yml`, or `envprof.toml`, unless `ENVPROF_FILE` is set.
+Defaults to the first found among `envprof.yaml`, `envprof.yml`, or `envprof.toml`, unless `ENVPROF_FILE` is set.
+
+## Subcommands
+
+<details>
+<summary><strong>list / ls</strong> — List profiles or variables</summary>
+
+- **Usage:**
+
+  - `envprof list [--verbose/-v] [profile] [variable]`
+
+- **Flags:**
+  - `--verbose`, `-v` – Show variable origins
+
+</details>
+
+<details>
+<summary><strong>export / x</strong> — Export profile to file or stdout</summary>
+
+- **Usage:**
+
+  - `envprof export [--prefix <string>] <profile> [file]`
+
+- **Flags:**
+    <!-- markdownlint-disable MD038 -->
+  - `--prefix` – String to prefix variables (default: `export `)
+    <!-- markdownlint-enable MD038 -->
+    </details>
+
+<details>
+<summary><strong>shell / sh</strong> — Spawn a subshell with profile</summary>
+
+- **Usage:**
+
+  - `envprof shell [--inherit/-i] [--shell <string>] <profile>`
+
+- **Flags:**
+  - `--inherit`, `-i` – Inherit current shell variables
+  - `--shell` – Force shell (default empty string -> detected)
+
+</details>
 
 ## Shell integration
 
-When using the `shell` subcommand, `envprof` exports `ENVPROF_ACTIVE_SHELL` to the active shell session,
-which can be used to customize the prompt.
+When using the `shell` subcommand, `envprof` sets `ENVPROF_ACTIVE_SHELL` in the environment -
+use it for customizing your prompt.
 
 An example for `starship.toml` would be:
 
@@ -190,12 +218,12 @@ variable = "ENVPROF_ACTIVE_SHELL"
 format = "\\[envprof: $env_value\\]($style) "
 ```
 
-The same variable is used to detect if `envprof` is running in a subshell, and prevent entering a new one (before exiting the current one).
+This variable is also used to detect if you’re already in an `envprof` subshell, preventing nested sessions.
 
-You can also define a function to quickly switch profiles in your shell:
+For convenience, define a shell function to quickly switch profiles:
 
 ```sh
-envprofx() {
+envprof-activate() {
   local output
   if output="$(envprof export "${1}" 2>&1)"; then
     eval "${output}"
@@ -205,7 +233,11 @@ envprofx() {
 }
 ```
 
-and use as `envprofx dev` to switch to the `dev` profile. Be aware that this will clutter your shell with the exported variables.
+Use `envprof-activate dev` to switch to the `dev` profile.
+
+> [!NOTE]
+> This will export variables into your current shell, potentially overwriting existing ones.
+> Repeated use will also mix the variables from different profiles.
 
 ## Demo
 

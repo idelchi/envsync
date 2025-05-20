@@ -3,10 +3,8 @@ package profile
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/idelchi/godyl/pkg/path/file"
-	"github.com/idelchi/godyl/pkg/path/files"
 )
 
 // Type represents the type of the profile file.
@@ -36,14 +34,8 @@ var (
 	ErrProfileNotFound = errors.New("profile not found")
 )
 
-// New creates a new store from the given path and fallbacks.
-// If path is empty, it will look for the first file in fallbacks.
-func New(path ...string) (*Store, error) {
-	file, err := File(path...)
-	if err != nil {
-		return nil, err
-	}
-
+// New creates a new store from the given path.
+func New(file file.File) (*Store, error) {
 	store := &Store{
 		File:     file,
 		Profiles: map[string]*Profile{},
@@ -65,11 +57,11 @@ func New(path ...string) (*Store, error) {
 func (s *Store) Load() (*Store, error) {
 	data, err := s.File.Read()
 	if err != nil {
-		return nil, fmt.Errorf("reading file %q: %w", s.File.Path(), err)
+		return nil, err //nolint:wrapcheck	// Error does not need additional wrapping.
 	}
 
 	if err = s.unmarshal(data); err != nil {
-		return nil, fmt.Errorf("marshalling file %q: %w", s.File.Path(), err)
+		return nil, err
 	}
 
 	// Make sure no nil entries exist in the profiles map.
@@ -83,14 +75,4 @@ func (s *Store) Load() (*Store, error) {
 	}
 
 	return s, err
-}
-
-// File returns the first file found in the given paths.
-func File(paths ...string) (file.File, error) {
-	file, ok := files.New("", paths...).Exists()
-	if !ok {
-		return file, fmt.Errorf("profile %w: %v", os.ErrNotExist, paths)
-	}
-
-	return file, nil
 }
