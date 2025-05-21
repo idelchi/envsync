@@ -143,7 +143,7 @@ PORT=80                 (inherited from "prod")
 TOKEN=secret            (inherited from "secrets.env")
 ```
 
-The inheritance chain is:
+The layering chain here is:
 
 ```sh
 secrets.env -> prod -> staging -> dev
@@ -195,10 +195,10 @@ Defaults to the first found among `envprof.yaml`, `envprof.yml`, or `envprof.tom
 
 - **Usage:**
 
-  - `envprof shell [--inherit/-i] [--shell <string>] <profile>`
+  - `envprof shell [--isolate/-i] [--shell <string>] <profile>`
 
 - **Flags:**
-  - `--inherit`, `-i` – Inherit current shell variables
+  - `--isolate`, `-i` – Prevent inheriting current shell variables
   - `--shell` – Force shell (default empty string -> detected)
 
 </details>

@@ -19,7 +19,7 @@ func Shell(files *[]string) *cobra.Command {
 
 	var (
 		shell   = env.GetAny("SHELL", "STARSHIP_SHELL")
-		inherit bool
+		isolate bool
 	)
 
 	cmd := &cobra.Command{
@@ -74,7 +74,7 @@ func Shell(files *[]string) *cobra.Command {
 				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
-			if inherit {
+			if !isolate {
 				vars.Env.Merge(env)
 			}
 
@@ -88,9 +88,8 @@ func Shell(files *[]string) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().
-		StringVarP(&shell, "shell", "s", shell, "Shell to spawn. Empty to use the current shell (if identified).")
-	cmd.Flags().BoolVarP(&inherit, "inherit", "i", false, "Inherit environment variables from the parent shell")
+	cmd.Flags().StringVarP(&shell, "shell", "s", shell, "Shell to launch (leave empty to auto-detect).")
+	cmd.Flags().BoolVarP(&isolate, "isolate", "i", false, "Isolate from parent environment.")
 
 	return cmd
 }
