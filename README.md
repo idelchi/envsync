@@ -134,7 +134,7 @@ PORT=80
 TOKEN=secret
 ```
 
-Inspecting with `envprof list dev -v` would show the inheritance chain:
+`envprof list dev -v` shows the variables and their origins:
 
 ```sh
 DEBUG=true              (inherited from "staging")
@@ -143,7 +143,7 @@ PORT=80                 (inherited from "prod")
 TOKEN=secret            (inherited from "secrets.env")
 ```
 
-The layering chain here is:
+The layering order here is:
 
 ```sh
 secrets.env -> prod -> staging -> dev
@@ -199,28 +199,32 @@ Defaults to the first found among `envprof.yaml`, `envprof.yml`, or `envprof.tom
 
 - **Flags:**
   - `--isolate`, `-i` – Prevent inheriting current shell variables
-  - `--shell` – Force shell (default empty string -> detected)
+  - `--shell`, `-s` – Force shell (default empty string -> detected)
 
 </details>
 
 ## Shell integration
 
-When using the `shell` subcommand, `envprof` sets `ENVPROF_ACTIVE_SHELL` in the environment -
-use it for customizing your prompt.
+When using the `shell` subcommand, `envprof` sets `ENVPROF_ACTIVE_PROFILE` in the environment.
 
-An example for `starship.toml` would be:
+This variable is used to detect if you’re already in an `envprof` subshell, preventing nested sessions.
+
+### Prompt
+
+Use `ENVPROF_ACTIVE_PROFILE`it to customize a `starship` prompt:
+
+**`starship.toml`**
 
 ```toml
-format = """${env_var.envprof}$all"""
-
 [env_var.envprof]
-variable = "ENVPROF_ACTIVE_SHELL"
-format = "\\[envprof: $env_value\\]($style) "
+variable = "ENVPROF_ACTIVE_PROFILE"
+format = '[\[envprof: $env_value\]]($style)'
+style = 'bold bright-green'
 ```
 
-This variable is also used to detect if you’re already in an `envprof` subshell, preventing nested sessions.
+### Function
 
-For convenience, define a shell function to quickly switch profiles:
+For convenience, you can define a shell function to quickly switch profiles:
 
 ```sh
 envprof-activate() {
@@ -237,7 +241,7 @@ Use `envprof-activate dev` to switch to the `dev` profile.
 
 > [!NOTE]
 > This will export variables into your current shell, potentially overwriting existing ones.
-> Repeated use will also mix the variables from different profiles.
+> Repeated use will also mix the variables from different profiles, as it won't unset them.
 
 ## Demo
 

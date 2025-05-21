@@ -46,7 +46,7 @@ func Shell(files *[]string) *cobra.Command {
 		Aliases: []string{"sh"},
 		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			if active := env.Get("ENVPROF_ACTIVE_SHELL"); env.Exists("ENVPROF_ACTIVE_SHELL") {
+			if active := env.Get("ENVPROF_ACTIVE_PROFILE"); env.Exists("ENVPROF_ACTIVE_PROFILE") {
 				//nolint:err113	// Occasional dynamic errors are fine.
 				return fmt.Errorf(
 					"already inside profile %q, nested profiles are not allowed, please exit first",
@@ -70,7 +70,7 @@ func Shell(files *[]string) *cobra.Command {
 				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
-			if err = vars.Env.AddPair("ENVPROF_ACTIVE_SHELL", prof); err != nil {
+			if err = vars.Env.AddPair("ENVPROF_ACTIVE_PROFILE", prof); err != nil {
 				return err //nolint:wrapcheck	// Error does not need additional wrapping.
 			}
 
