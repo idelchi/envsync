@@ -211,7 +211,7 @@ This variable is used to detect if you’re already in an `envprof` subshell, pr
 
 ### Prompt
 
-Use `ENVPROF_ACTIVE_PROFILE`it to customize a `starship` prompt:
+Use `ENVPROF_ACTIVE_PROFILE` to customize a `starship` prompt:
 
 **`starship.toml`**
 
